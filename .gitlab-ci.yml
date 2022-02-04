@@ -15,7 +15,7 @@ build_image:
 test:
   image: gitlab.semiotic.ai:5050/cadcad-experiments/cadr
   script:
-    - make test
+    - python -m pytest tests/
 
 #image: python:3.9-slim
 
