@@ -1,19 +1,24 @@
-build image:
-  image: docker:20.10.12
-  services:
-    - docker:20.10.12-dind
-  script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-    - docker build -t $CI_REGISTRY_IMAGE .
-    - docker push $CI_REGISTRY_IMAGE
-
-#image: python:3.9-slim
-
-#before_script:
-  #- pip install -r requirements.txt
-  #- pip install src/
-
-#test:
-  #stage: test
+#build_image:
+  #image: docker:20.10.12
+  #services:
+    #- docker:20.10.12-dind
   #script:
-    #- python -m pytest tests/
+    #- echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    #- docker build -t $CI_REGISTRY_IMAGE .
+    #- docker push $CI_REGISTRY_IMAGE
+
+image: python:3.9-slim
+
+before_script:
+  - pip install -r requirements.txt
+  - pip install src/
+
+test:
+  stage: test
+  script:
+    - coverage run -m pytest tests/
+    - coverage report
+    - coverage xml
+  artifacts:
+    reports:
+      cobertura: coverage.xml
