@@ -1,5 +1,8 @@
 test:
+  stage: build
+    script:
+      - pip install -r requirements.txt
+      - pip install src/
   stage: test
   script:
-    - make all
-
+    - python -m pytest tests/
