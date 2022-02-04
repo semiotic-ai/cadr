@@ -1,8 +1,10 @@
+image: python:3.9-slim
+
+before_script:
+  - pip install -r requirements.txt
+  - pip install src/
+
 test:
-  stage: build
-    script:
-      - pip install -r requirements.txt
-      - pip install src/
   stage: test
   script:
     - python -m pytest tests/
