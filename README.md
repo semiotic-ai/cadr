@@ -1,5 +1,9 @@
 # cadR
 
+[![pipeline status](https://gitlab.semiotic.ai/cadcad-experiments/cadr/badges/main/pipeline.svg)](https://gitlab.semiotic.ai/cadcad-experiments/cadr/-/commits/main)
+[![coverage report](https://gitlab.semiotic.ai/cadcad-experiments/cadr/badges/main/coverage.svg)](https://gitlab.semiotic.ai/cadcad-experiments/cadr/-/commits/main)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 `cadR` is a reinforcement library compatible with [`cadCAD`](https://cadcad.org/).
 
 
