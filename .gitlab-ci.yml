@@ -15,20 +15,9 @@ build_image:
 test:
   image: gitlab.semiotic.ai:5050/cadcad-experiments/cadr
   script:
-    - python -m pytest tests/
-
-#image: python:3.9-slim
-
-#before_script:
-  #- pip install -r requirements.txt
-  #- pip install src/
-
-#test:
-  #stage: test
-  #script:
-    #- coverage run -m pytest tests/
-    #- coverage report
-    #- coverage xml
-  #artifacts:
-    #reports:
-      #cobertura: coverage.xml
+    - coverage run -m pytest tests/
+    - coverage report
+    - coverage xml
+  artifacts:
+    reports:
+      cobertura: coverage.xml
