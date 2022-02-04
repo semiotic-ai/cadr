@@ -1,0 +1,13 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+# library
+numpy
+torch==1.10.2+cpu
+torchaudio==0.10.2+cpu
+torchvision==0.11.3+cpu
+
+# dev/tests
+pytest
+pytest-icdiff
+pytest-cov
+mypy
+pylint

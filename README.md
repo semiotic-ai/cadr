@@ -46,7 +46,7 @@ def update(algorithm: object, buffer: object, gradient_steps: int, batch_size: i
 The overall training loop in a typical RL flow looks like:
 
 ```python
-for i in range(num_training_iters):
+for _ in range(num_training_iters):
     rollout_collection()
     update()
 ```
@@ -59,4 +59,53 @@ Most existing RL implementations depend on a Gym-like interface.
 Their `rollout_collection` step calls `environment.step` and `environment.reset`.
 On the other hand, `cadCAD` effectively replaces the entire `rollout_collection` method, with the exception of pushing samples to the buffer.
 As such, `cadCAD` is incompatible with most popular RL libraries.
-If we want to use RL within the `cadCAD` ecosystem, we will need to develop a new RL library - hence: `cadR`.
+If we want to use RL within the `cadCAD` ecosystem, we will need to develop a new RL library.
+Hence, `cadR`.
+
+## Installation
+
+There are several installation options.
+Choose the one that best suits your need.
+
+### Docker (Recommended)
+
+```bash
+$ make build
+```
+
+To test:
+
+```bash
+$ make test
+```
+
+### Pip
+
+```bash
+$ pip install -r requirements.txt
+$ pip install -e src/
+```
+
+**Note:** The `-e` flag installs `cadR` as a developer.
+If you only care about using the library, use `pip install src/`
+
+To test:
+
+```bash
+$ python -m pytest tests/
+```
+
+### Minimal (Not Recommended)
+
+```bash
+$ pip install -e src/ --find-links https://download.pytorch.org/whl/torch_stable.html
+```
+
+**Note:** The `-e` flag installs `cadR` as a developer.
+If you only care about using the library, use `pip install src/ --find-links https://download.pytorch.org/whl/torch_stable.html`
+
+To test:
+
+```bash
+$ python -m pytest tests/
+```
