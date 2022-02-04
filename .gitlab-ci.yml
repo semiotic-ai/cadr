@@ -21,3 +21,9 @@ test:
   artifacts:
     reports:
       cobertura: coverage.xml
+  only:
+    changes:
+      - Dockerfile
+      - requirements.txt
+      - tests/**/*.py
+      - src/**/*.py
