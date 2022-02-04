@@ -6,6 +6,16 @@ build_image:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
     - docker build -t $CI_REGISTRY_IMAGE .
     - docker push $CI_REGISTRY_IMAGE
+  only:
+    changes:
+      - Dockerfile
+      - requirements.txt
+      - src/setup.py
+
+test:
+  image: gitlab.semiotic.ai:5050/cadcad-experiments/cadr
+  script:
+    - make test
 
 #image: python:3.9-slim
 
