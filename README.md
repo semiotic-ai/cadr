@@ -24,8 +24,7 @@ def rollout_collection(
     num_timesteps_per_episode: int
 ):
     for ep in range(num_episodes_per_update):
-        observation = environment.reset()
-        for t in range(num_timesteps_per_episode):
+        observation = environment.reset() for t in range(num_timesteps_per_episode):
             action = algorithm.forward(observation)
             buffer.push(observation, action, **other_params)
             observation = environment.step()
@@ -72,18 +71,6 @@ Hence, `cadR`.
 There are several installation options.
 Choose the one that best suits your need.
 
-### Docker (Recommended)
-
-```bash
-$ make build
-```
-
-To test:
-
-```bash
-$ make test
-```
-
 ### Pip
 
 ```bash
@@ -113,4 +100,16 @@ To test:
 
 ```bash
 $ python -m pytest tests/
+```
+
+### Docker (Not yet implemented)
+
+```bash
+$ make build
+```
+
+To test:
+
+```bash
+$ make test
 ```
