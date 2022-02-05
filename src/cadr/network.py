@@ -56,3 +56,34 @@ def mlp(*, activations: tuple[nn.Module], layer_sizes: tuple[int]) -> nn.Module:
         layers.append(act())
     net = nn.Sequential(*layers)
     return net
+
+
+def polyak(*, agent: nn.Module, rho: float, target: nn.Module) -> None:
+    """Update the target's weights using the agent's weights as per:
+
+    ..math:: \\theta_{\\text{target}} \\leftarrow
+        \\rho \\theta_{\\text{target}} + (1 - \\rho) \\theta
+
+    Parameters
+    ----------
+    agent: nn.Module
+        The network from which to copy the weights.
+    rho: float
+        The interpolation factor in polyak averaging.
+    target: ActorCritic
+        The network to which to copy the weights.
+
+    Examples
+    --------
+    >>> from cadr.network import mlp, polyak
+    >>> import torch.nn as nn
+    >>> activations = (nn.ReLU, nn.ReLU, nn.Tanh)
+    >>> layer_sizes = (4, 256, 256, 2)
+    >>> agent = mlp(activations=activations, layer_sizes=layer_sizes)
+    >>> target = mlp(activations=activations, layer_sizes=layer_sizes)
+    >>> polyak(agent=agent, rho=0.995, target=target)
+    """
+    with torch.no_grad():
+        for p, pt in zip(agent.parameters(), target.parameters()):
+            pt.data.mul_(rho)
+            pt.data.add_((1 - rho) * p.data)
