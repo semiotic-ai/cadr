@@ -1,6 +1,7 @@
 """Implements functions related to networks."""
 
-import torch.nn as nn
+import torch
+from torch import nn
 
 
 def mlp(*, activations: tuple[nn.Module], layer_sizes: tuple[int]) -> nn.Module:

@@ -11,3 +11,7 @@ pytest-icdiff
 pytest-cov
 mypy
 pylint
+
+# examples
+cadCad
+matplotlib

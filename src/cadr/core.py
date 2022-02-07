@@ -1,6 +1,6 @@
 """Implement classes related to agents."""
 
-import numpy
+import numpy as np
 import torch
 import torch.nn as nn
 

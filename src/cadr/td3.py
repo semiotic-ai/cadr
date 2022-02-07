@@ -4,16 +4,18 @@ from collections import deque
 import copy
 import itertools
 import functools
-from typing import Iterable
+from typing import Callable, Iterable
 
+import numpy as np
 import torch
 import torch.nn as nn
 
-import cadr.core as core
 import cadr.buffer as cbuff
+import cadr.core as core
+import cadr.network as cnet
 
 
-class Critic(cadr.Critic):
+class Critic(core.Critic):
     """TD3's critic.
 
     Parameters
@@ -95,10 +97,9 @@ class ActorCritic(core.ActorCritic):
     def __init__(
         self, *, action_scale: float, pi: nn.Module, q: nn.Module, qt: nn.Module
     ):
-        super().__init__()
-        self.actor = core.Actor(action_scale=action_scale, pi=pi)
+        super().__init__(action_scale=action_scale, pi=pi, q=q)
         self.critic = Critic(q=q)
-        self.twin_critic = Critic(q=q)
+        self.twin_critic = Critic(q=qt)
 
 
 def _q_parameters(*, agent: ActorCritic) -> Iterable[torch.Tensor]:
@@ -552,6 +553,7 @@ def td3_update(
             agent=agent,
             actor_loss=pi_loss,
             actor_optim=pi_optim,
+            actor_update_frequency=2,
             batch_size=1,
             buffer=buff,
             critic_loss=q_loss,
@@ -571,7 +573,7 @@ def td3_update(
         q_loss.backward()
         critic_optim.step()
 
-        if i % actor_delay == 0:
+        if i % actor_update_frequency == 0:
             _freeze_critic(agent=agent)
 
             actor_optim.zero_grad()
