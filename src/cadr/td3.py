@@ -4,7 +4,7 @@ from collections import deque
 import copy
 import itertools
 import functools
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Type
 
 import numpy as np
 import torch
@@ -368,10 +368,10 @@ def td3_agent(
 def td3_optimizer(
     *,
     actor_lr: float,
-    actor_optimizer: torch.optim.Optimizer,
+    actor_optimizer: Type[torch.optim.Optimizer],
     agent: ActorCritic,
     critic_lr: float,
-    critic_optimizer: torch.optim.Optimizer,
+    critic_optimizer: Type[torch.optim.Optimizer],
 ) -> tuple[torch.optim.Optimizer, torch.optim.Optimizer]:
     """Return the TD3 actor and critic optimizers.
 
@@ -390,9 +390,9 @@ def td3_optimizer(
 
     Returns
     -------
-    actor_optim: torch.optim.Optimizer
+    actor_optim: Type[torch.optim.Optimizer]
         The actor's optimizer.
-    critic_optim: torch.optim.Optimizer
+    critic_optim: Type[torch.optim.Optimizer]
         The critic's optimizer.
 
     Examples
@@ -413,10 +413,9 @@ def td3_optimizer(
             critic_optimizer=optim.Adam
         )
     """
-    # TODO: Type hinting for uninitialised class?
-    # Mypy thinks this is running Optimizer.__call__ rather than Optimizer.__init__
-    actor_optim = actor_optimizer(agent.actor.parameters(), lr=actor_lr)
-    critic_optim = actor_optimizer(_q_parameters(agent=agent), lr=critic_lr)
+    # Ignore because lr not in base class `Optimizer`, but it always in the concretion.
+    actor_optim = actor_optimizer(agent.actor.parameters(), lr=actor_lr)  # type: ignore
+    critic_optim = actor_optimizer(_q_parameters(agent=agent), lr=critic_lr)  # type: ignore
 
     return actor_optim, critic_optim
 

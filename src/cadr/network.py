@@ -138,9 +138,8 @@ def backpropagation(
     >>> loss_val = cnet.backpropagation(batch=batch, loss=my_loss, optim=optim)
     """
     optim.zero_grad()
-    # TODO: type hint kwarg for callable or partial
-    # Mypy: Unexpected keyword argument "batch"
-    loss_val = loss(batch=batch)
+    # Ignore because mypy doesn't like kwargs on Callables
+    loss_val = loss(batch=batch)  # type: ignore
     loss_val.backward()
     optim.step()
 
