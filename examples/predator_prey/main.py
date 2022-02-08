@@ -29,11 +29,15 @@ def main():
     torch.manual_seed(0)
 
     # RL setup
-    num_episodes = 1000
+    num_episodes = 2500
     buffer = cbuff.buffer(max_length=int(1e6))
     pi = cnet.mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[4, 256, 256, 2])
-    q = cnet.mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[6, 256, 256, 1])
-    qt = cnet.mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[6, 256, 256, 1])
+    q = cnet.mlp(
+        activations=[nn.ReLU, nn.ReLU, nn.Identity], layer_sizes=[6, 256, 256, 1]
+    )
+    qt = cnet.mlp(
+        activations=[nn.ReLU, nn.ReLU, nn.Identity], layer_sizes=[6, 256, 256, 1]
+    )
     pursuer, target_pursuer = ctd3.td3_agent(action_scale=1.0, pi=pi, q=q, qt=qt)
     pi_optim, q_optim = ctd3.td3_optimizer(
         actor_lr=1e-4,
@@ -52,7 +56,7 @@ def main():
 
     # Environment setup (using cadCAD)
     del configs[:]
-    sim_config = config_sim({"T": range(100), "N": 1})
+    sim_config = config_sim({"T": range(200), "N": 1})
     partial_state_update_blocks = [
         {
             "policies": {
@@ -70,6 +74,7 @@ def main():
     ]
 
     # Run training loop
+    q_losses, pi_losses = [], []
     for ep in range(num_episodes):
         if ep % 100 == 0:
             print(ep)
@@ -122,7 +127,7 @@ def main():
             buffer.append(sample)
 
         # UPDATE ALGORITHM
-        ctd3.td3_update(
+        ql, pl = ctd3.td3_update(
             agent=pursuer,
             actor_loss=pi_loss,
             actor_optim=pi_optim,
@@ -137,6 +142,10 @@ def main():
             target=target_pursuer,
         )
 
+        q_losses.extend(ql)
+        pi_losses.extend(pl)
+
+    breakpoint()
     playback.playback(system_events=system_events)
 
 

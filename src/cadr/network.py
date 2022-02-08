@@ -1,5 +1,7 @@
 """Implements functions related to networks."""
 
+from typing import Callable, Iterable
+
 import torch
 from torch import nn
 
@@ -52,6 +54,9 @@ def mlp(*, activations: tuple[nn.Module], layer_sizes: tuple[int]) -> nn.Module:
         )
 
     layers = []
+    lin: int
+    lout: int
+    act: nn.Module
     for lin, lout, act in zip(layer_sizes[:-1], layer_sizes[1:], activations):
         layers.append(nn.Linear(lin, lout))
         layers.append(act())
@@ -88,3 +93,95 @@ def polyak(*, agent: nn.Module, rho: float, target: nn.Module) -> None:
         for p, pt in zip(agent.parameters(), target.parameters()):
             pt.data.mul_(rho)
             pt.data.add_((1 - rho) * p.data)
+
+
+def backpropagation(
+    *,
+    batch: dict[str, torch.Tensor],
+    loss: Callable[[dict[str, torch.Tensor]], torch.Tensor],
+    optim: torch.optim.Optimizer,
+) -> float:
+    """Update the weights of the network using backpropagation.
+
+    Parameters
+    ----------
+    batch: dict[str, torch.Tensor]:
+        A batch of samples on which to compute the loss.
+    loss: Callable[[dict[str, torch.Tensor]], torch.Tensor]
+        The loss function whose gradient will be used to backpropagate. Typically, you
+        should use ``functools.partial`` to ensure that the loss is set up with all
+        parameters other than the batch.
+    optim: torch.optim.Optimizer
+        A torch optimizer used to calculate the update step.
+
+    Returns
+    -------
+    loss_val: float
+        The computed loss value.
+
+    Examples
+    --------
+    >>> import functools
+    >>> from torch import nn
+    >>> import cadr.network as cnet
+    >>> net = cnet.mlp(activations=[nn.ReLU, nn.Identity], layer_sizes=[1, 32, 1])
+    >>> optim = nn.Adam(net.parameters(), lr=1e-4)
+    >>> def loss_func(*, batch, net):
+            pred = net(batch["features"])
+            loss = ((batch["labels"] - pred) ** 2).mean()
+            return loss
+    >>> batch = {
+            "features": torch.tensor([[3.0], [4.0], [5.0]]),
+            "labels": torch.tensor([[-3.0], [-4.0], [-5.0]]),
+        }
+    >>> my_loss = functools.partial(loss_func, net=net)
+    >>> loss_val = cnet.backpropagation(batch=batch, loss=my_loss, optim=optim)
+    """
+    optim.zero_grad()
+    # TODO: type hint kwarg for callable or partial
+    # Mypy: Unexpected keyword argument "batch"
+    loss_val = loss(batch=batch)
+    loss_val.backward()
+    optim.step()
+
+    return loss_val.detach().numpy().item()
+
+
+def freeze(*, parameters: Iterable[torch.Tensor]) -> bool:
+    """Freeze the given parameters.
+
+    Parameters
+    ----------
+    parameters: Iterable[torch.Tensor]
+        The parameters to freeze.
+
+    Returns
+    -------
+    frozen: bool
+        True. Used to track whether the network is currently frozen.
+    """
+    for param in parameters:
+        param.requires_grad = False
+
+    frozen = True
+    return frozen
+
+
+def unfreeze(*, parameters: Iterable[torch.Tensor]) -> bool:
+    """Unfreeze the given parameters.
+
+    Parameters
+    ----------
+    parameters: Iterable[torch.Tensor]
+        The parameters to unfreeze.
+
+    Returns
+    -------
+    frozen: bool
+        False. Used to track whether the network is currently frozen.
+    """
+    for param in parameters:
+        param.requires_grad = True
+
+    frozen = False
+    return frozen

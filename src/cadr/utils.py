@@ -1,17 +1,21 @@
 """Implements utility functions."""
 
+from typing import Any, Union
 
-def list_to_dict(value: list[dict]) -> dict[list]:
+import numpy as np
+
+
+def list_to_dict(value: list[dict[Any, np.ndarray]]) -> dict[Any, list[np.ndarray]]:
     """Convert a list of dicts to a dict of lists.
 
     Parameters
     ----------
-    value: list[dict]
+    value: list[dict[Any, list[Any]]]
         The list to convert.
 
     Returns
     -------
-    converted: dict[list]
+    converted: dict[Any, list]
         The converted dict of lists.
 
     Examples

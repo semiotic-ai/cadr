@@ -11,34 +11,80 @@ import torch
 import torch.nn as nn
 
 import cadr.buffer as cbuff
-import cadr.core as core
 import cadr.network as cnet
 
 
-class Critic(core.Critic):
+class Actor(nn.Module):
+    """TD3's actor.
+
+    Parameters
+    ----------
+        action_scale (float): The positive bound of the action space.
+        pi (nn.Module): The policy network of the agent.
+
+    Attributes
+    ----------
+        action_scale (float): The positive bound of the action space.
+        pi (nn.Module): The policy network of the agent.
+
+    Examples
+    --------
+    >>> from cadr.td3 import Actor
+    >>> from cadr.network import mlp
+    >>> import torch.nn as nn
+    >>> pi = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[2, 256, 256, 4])
+    >>> actor = Actor(action_scale=1.0, pi=pi)
+    """
+
+    def __init__(self, *, action_scale: float, pi: nn.Module):
+        super().__init__()
+        self.action_scale = action_scale
+        self.pi = pi
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the actor.
+
+        Parameters
+        ----------
+        observation: torch.Tensor
+            The observation of the agent.
+
+        Returns
+        -------
+        action: torch.Tensor
+            The action of the agent.
+        """
+        action = self.action_scale * self.pi(observation)
+        return action
+
+
+class Critic(nn.Module):
     """TD3's critic.
 
     Parameters
     ----------
         q: nn.Module
-        The value network of the actor.
+            The value network of the agent.
 
     Attributes
     ----------
         q: nn.Module
-            The value network of the actor.
+            The value network of the agent.
 
     Examples
     --------
     >>> from cadr.td3 import Critic
     >>> from cadr.network import mlp
     >>> import torch.nn as nn
-    >>> q = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[2, 256, 256, 4])
+    >>> q = mlp(
+            activations=[nn.ReLU, nn.ReLU, nn.Identity], layer_sizes=[6, 256, 256, 1]
+        )
     >>> critic = Critic(q=q)
     """
 
     def __init__(self, *, q: nn.Module):
-        super().__init__(q=q)
+        super().__init__()
+        self.q = q
 
     def forward(self, action: torch.Tensor, observation: torch.Tensor) -> torch.Tensor:
         """Forward pass of the critic.
@@ -56,11 +102,12 @@ class Critic(core.Critic):
             The value of the action.
         """
         _inp = torch.cat([observation, action], dim=-1)
-        value = self.q(_inp)
+        unsqueezed_value = self.q(_inp)
+        value = torch.squeeze(unsqueezed_value, dim=-1)  # Squeeze for correct shape
         return value
 
 
-class ActorCritic(core.ActorCritic):
+class ActorCritic(nn.Module):
     """TD3's actor-critic.
 
     Parameters
@@ -76,11 +123,11 @@ class ActorCritic(core.ActorCritic):
 
     Attributes
     ----------
-        actor: nn.Module
+        actor: Actor
             The policy network of the agent.
-        critic: nn.Module
+        critic: Critic
             The value network of the agent.
-        twin_critic: nn.Module
+        twin_critic: Critic
             The twin value network of the agent.
 
     Examples
@@ -97,9 +144,27 @@ class ActorCritic(core.ActorCritic):
     def __init__(
         self, *, action_scale: float, pi: nn.Module, q: nn.Module, qt: nn.Module
     ):
-        super().__init__(action_scale=action_scale, pi=pi, q=q)
+        super().__init__()
+        self.actor = Actor(action_scale=action_scale, pi=pi)
         self.critic = Critic(q=q)
         self.twin_critic = Critic(q=qt)
+
+    def action(self, *, observation: torch.Tensor) -> np.ndarray:
+        """Get the action for the agent to take.
+
+        Parameters
+        ----------
+        observation: torch.Tensor
+            The agent's observation.
+
+        Returns
+        -------
+        action: np.ndarray
+            The action the agent chooses to take as a numpy array (no gradient).
+        """
+        with torch.no_grad():
+            action = self.actor(observation).numpy()
+        return action
 
 
 def _q_parameters(*, agent: ActorCritic) -> Iterable[torch.Tensor]:
@@ -133,54 +198,6 @@ def _q_parameters(*, agent: ActorCritic) -> Iterable[torch.Tensor]:
     """
     params = itertools.chain(agent.critic.parameters(), agent.twin_critic.parameters())
     return params
-
-
-def _freeze_critic(*, agent: ActorCritic) -> None:
-    """Freeze the parameters of the critics of the agent.
-
-    Parameters
-    ----------
-    agent: ActorCritic
-        The agent whose critics to freeze.
-
-    Examples
-    --------
-    >>> from cadr.td3 import ActorCritic, _freeze_critic
-    >>> from cadr.network import mlp
-    >>> import torch.nn as nn
-    >>> pi = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[2, 256, 256, 4])
-    >>> q = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[6, 256, 256, 1])
-    >>> qt = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[6, 256, 256, 1])
-    >>> agent = ActorCritic(action_scale=1.0, pi=pi, q=q, qt=qt)
-    >>> _freeze_critic(agent=agent)
-    """
-    params = _q_parameters(agent=agent)
-    for param in params:
-        param.requires_grad = False
-
-
-def _unfreeze_critic(*, agent: ActorCritic) -> None:
-    """Unfreeze the parameters of the critics of the agent.
-
-    Parameters
-    ----------
-    agent: ActorCritic
-        The agent whose critics to unfreeze.
-
-    Examples
-    --------
-    >>> from cadr.td3 import ActorCritic, _freeze_critic
-    >>> from cadr.network import mlp
-    >>> import torch.nn as nn
-    >>> pi = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[2, 256, 256, 4])
-    >>> q = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[6, 256, 256, 1])
-    >>> qt = mlp(activations=[nn.ReLU, nn.ReLU, nn.Tanh], layer_sizes=[6, 256, 256, 1])
-    >>> agent = ActorCritic(action_scale=1.0, pi=pi, q=q, qt=qt)
-    >>> _unfreeze_critic(agent=agent)
-    """
-    params = _q_parameters(agent=agent)
-    for param in params:
-        param.requires_grad = True
 
 
 def _pi_loss(*, agent: ActorCritic, batch: dict[str, torch.Tensor]) -> torch.Tensor:
@@ -396,6 +413,8 @@ def td3_optimizer(
             critic_optimizer=optim.Adam
         )
     """
+    # TODO: Type hinting for uninitialised class?
+    # Mypy thinks this is running Optimizer.__call__ rather than Optimizer.__init__
     actor_optim = actor_optimizer(agent.actor.parameters(), lr=actor_lr)
     critic_optim = actor_optimizer(_q_parameters(agent=agent), lr=critic_lr)
 
@@ -410,8 +429,8 @@ def td3_loss(
     target: ActorCritic,
     target_noise: float,
 ) -> tuple[
-    Callable[dict[str, torch.Tensor], torch.Tensor],
-    Callable[dict[str, torch.Tensor], torch.Tensor],
+    Callable[[dict[str, torch.Tensor]], torch.Tensor],
+    Callable[[dict[str, torch.Tensor]], torch.Tensor],
 ]:
     """Return the partial loss functions of TD3.
 
@@ -432,9 +451,9 @@ def td3_loss(
 
     Returns
     -------
-    pi_loss: Callable[dict[str, torch.Tensor], torch.Tensor]
+    pi_loss: Callable[[dict[str, torch.Tensor]], torch.Tensor]
         The policy loss function.
-    q_loss: Callable[dict[str, torch.Tensor], torch.Tensor]
+    q_loss: Callable[[dict[str, torch.Tensor]], torch.Tensor]
         The value loss function.
 
     Examples
@@ -476,25 +495,25 @@ def td3_loss(
 def td3_update(
     *,
     agent: ActorCritic,
-    actor_loss: Callable[dict[str, torch.Tensor], torch.Tensor],
+    actor_loss: Callable[[dict[str, torch.Tensor]], torch.Tensor],
     actor_optim: torch.optim.Optimizer,
     actor_update_frequency: int,
     batch_size: int,
     buffer: deque[dict[str, np.ndarray]],
-    critic_loss: Callable[dict[str, torch.Tensor], torch.Tensor],
+    critic_loss: Callable[[dict[str, torch.Tensor]], torch.Tensor],
     critic_optim: torch.optim.Optimizer,
     device: str,
     gradient_steps: int,
     rho: float,
     target: ActorCritic,
-) -> None:
+) -> tuple[list[float], list[float]]:
     """Update the TD3 agent's weights.
 
     Parameters
     ----------
     agent: ActorCritic
         The TD3 agent.
-    actor_loss: Callable[dict[str, torch.Tensor], torch.Tensor]
+    actor_loss: Callable[[dict[str, torch.Tensor]], torch.Tensor]
         The actor's loss function.
     actor_optim: torch.optim.Optimizer
         The actor's optimizer.
@@ -505,7 +524,7 @@ def td3_update(
         The number of samples to sample from the buffer.
     buffer: deque[dict[str, np.ndarray]]
         The buffer containing the samples.
-    critic_loss: Callable[dict[str, torch.Tensor], torch.Tensor]
+    critic_loss: Callable[[dict[str, torch.Tensor]], torch.Tensor]
         The critic's loss function.
     critic_optim: torch.optim.Optimizer
         The critic's optimizer.
@@ -522,6 +541,13 @@ def td3_update(
 
     target: ActorCritic
         The target TD3 agent.
+
+    Returns
+    -------
+    q_losses: list[float]
+        A list of the critic's losses.
+    pi_losses: list[float]
+        A list of the actor's losses.
 
     Examples
     --------
@@ -564,24 +590,29 @@ def td3_update(
             target=target
         )
     """
+    q_losses = []
+    pi_losses = []
     for i in range(gradient_steps):
         batch = cbuff.batch(batch_size=batch_size, buffer=buffer, device=device)
 
         # Critic loss
-        critic_optim.zero_grad()
-        q_loss = critic_loss(batch=batch)
-        q_loss.backward()
-        critic_optim.step()
+        q_loss = cnet.backpropagation(batch=batch, loss=critic_loss, optim=critic_optim)
+        q_losses.append(q_loss)
 
         if i % actor_update_frequency == 0:
-            _freeze_critic(agent=agent)
+            # Freeze critic to prevent gradient during actor backprop
+            frozen = cnet.freeze(parameters=_q_parameters(agent=agent))
 
-            actor_optim.zero_grad()
-            pi_loss = actor_loss(batch=batch)
-            pi_loss.backward()
-            actor_optim.step()
+            # Actor loss
+            pi_loss = cnet.backpropagation(
+                batch=batch, loss=actor_loss, optim=actor_optim
+            )
+            pi_losses.append(pi_loss)
 
-            _unfreeze_critic(agent=agent)
+            # Unfreeze critic to enable gradient for critic updates.
+            frozen = cnet.unfreeze(parameters=_q_parameters(agent=agent))
 
-            # Update target weights
+            # # Update target weights
             cnet.polyak(agent=agent, target=target, rho=rho)
+
+    return q_losses, pi_losses

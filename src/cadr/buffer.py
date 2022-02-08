@@ -38,7 +38,7 @@ def buffer(*, max_length: int) -> deque[dict[str, np.ndarray]]:
     1
     """
     try:
-        buffer = deque(maxlen=max_length)
+        buffer: deque[dict[str, np.ndarray]] = deque(maxlen=max_length)
     except (ValueError, TypeError):
         raise ValueError("max_length must be a positive integer.")
 
