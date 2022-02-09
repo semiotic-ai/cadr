@@ -56,7 +56,7 @@ def main():
 
     # Environment setup (using cadCAD)
     del configs[:]
-    sim_config = config_sim({"T": range(200), "N": 1})
+    sim_config = config_sim({"T": range(200), "N": 1, "M": {"delta_t": [0.1]}})
     partial_state_update_blocks = [
         {
             "policies": {
@@ -95,7 +95,6 @@ def main():
             "pursuer_agent": pursuer,
             "pursuer_reward": 0.0,
             "pursuer_done": 0,
-            "delta_t": 0.1,
             "pursuer_observation": obs,
             "pursuer_action": np.zeros((2,)),
         }

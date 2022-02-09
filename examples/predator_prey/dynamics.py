@@ -36,7 +36,7 @@ def update_pursuer_state(
     """
     pstate = state["pursuer_state"]
     paction = actions["pursuer_action"]
-    delta_t = [state["delta_t"]] * len(pstate.position)
+    delta_t = [params["delta_t"]] * len(pstate.position)
 
     updated_state = tuple(
         map(

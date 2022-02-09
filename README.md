@@ -195,6 +195,9 @@ If you have access to a `gym` environment, we'd encourage you to use a different
 That being said, we will need to set up certain special components for using `cadCAD` in an RL setting.
 The first thing to know is that the `"T"` parameter in `cadCAD` refers to the `episode_length` in an RL setting.
 The `"N"` parameter is for Monte-Carlo simulation, and probably should be set to `1` for most RL algorithms.
+We can also use the `"M"` parameter to specify any constants we may want to provide.
+For example, we could provide a timestep size as `"M": {"delta_t": [0.1]}`.
+Just note that since `"M"` is technically used for Monte Carlo simulations for sweeping parameters, you'll want to push any constants into a list of size 1.
 We'll also want to set up the `partial_state_update_blocks`.
 This is where we'll start to pass in some stuff explicitly related to RL.
 Firstly, your policies need to translate the output of your agents to the input `cadCAD` expects.
@@ -267,7 +270,6 @@ for ep in range(num_episodes):
 This is crucial for RL.
 As a result, we actually finialise setting up our agents within this `for` loop so that we can use `numpy.random` or something similar.
 Remember that for all of the variables you defined in `partial_state_update_blocks` before, you'll now need to specify some initial value.
-In addition, you'll want to pass in any constants you may want to use, as well as the agent itself, so that you can access it in your policy function.
 You then execute the normal `cadCAD` workflow to run the simulation for 1 episode.
 
 ```python
@@ -281,7 +283,6 @@ for ep in range(num_episodes):
         "agent_observation": _state,
         "agent_action": np.zeros((2,))
         "agent": agent,
-        "delta_t": 0.1,
     }
     experiment = Experiment()
     experiment.append_configs(
@@ -329,7 +330,6 @@ for ep in range(num_episodes):
         "agent_observation": _state,
         "agent_action": np.zeros((2,))
         "agent": agent,
-        "delta_t": 0.1,
     }
     experiment = Experiment()
     experiment.append_configs(
