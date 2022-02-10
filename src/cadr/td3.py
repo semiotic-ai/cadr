@@ -1,9 +1,9 @@
 """Implements the Twin-Delayed DDPG Algorithm."""
 
-from collections import deque
 import copy
-import itertools
 import functools
+import itertools
+from collections import deque
 from typing import Callable, Iterable, Type
 
 import numpy as np

@@ -3,7 +3,6 @@ import setuptools
 # Import the local code to set up.
 import cadr  # noqa
 
-
 NAME = "cadr"
 DESCRIPTION = "Reinforcement learning library compatible with cadCAD"
 MAINTAINER = "Anirudh A. Patel"

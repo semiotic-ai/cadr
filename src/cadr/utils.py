@@ -1,6 +1,6 @@
 """Implements utility functions."""
 
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 
