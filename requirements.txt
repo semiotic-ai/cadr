@@ -10,7 +10,7 @@ pytest
 pytest-icdiff
 pytest-cov
 mypy
-pylint
+flake8
 
 # examples
 cadCad

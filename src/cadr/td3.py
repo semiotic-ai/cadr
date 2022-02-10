@@ -282,7 +282,14 @@ def _q_loss(
             "reward": torch.Tensor([-4.2], [-12.0]),
             "done": torch.Tensor([0.0], [0.0]),
         }
-    >>> _q_loss(agent=agent, batch=batch, gamma=0.995, noise_clip=0.5, target=target, target_noise=0.2)
+    >>> _q_loss(
+            agent=agent,
+            batch=batch,
+            gamma=0.995,
+            noise_clip=0.5,
+            target=target,
+            target_noise=0.2
+        )
     12002
     """
     obs = batch["observation"]
@@ -415,7 +422,9 @@ def td3_optimizer(
     """
     # Ignore because lr not in base class `Optimizer`, but it always in the concretion.
     actor_optim = actor_optimizer(agent.actor.parameters(), lr=actor_lr)  # type: ignore
-    critic_optim = actor_optimizer(_q_parameters(agent=agent), lr=critic_lr)  # type: ignore
+    critic_optim = actor_optimizer(
+        _q_parameters(agent=agent), lr=critic_lr
+    )  # type: ignore
 
     return actor_optim, critic_optim
 
@@ -600,7 +609,7 @@ def td3_update(
 
         if i % actor_update_frequency == 0:
             # Freeze critic to prevent gradient during actor backprop
-            frozen = cnet.freeze(parameters=_q_parameters(agent=agent))
+            _ = cnet.freeze(parameters=_q_parameters(agent=agent))
 
             # Actor loss
             pi_loss = cnet.backpropagation(
@@ -609,7 +618,7 @@ def td3_update(
             pi_losses.append(pi_loss)
 
             # Unfreeze critic to enable gradient for critic updates.
-            frozen = cnet.unfreeze(parameters=_q_parameters(agent=agent))
+            _ = cnet.unfreeze(parameters=_q_parameters(agent=agent))
 
             # # Update target weights
             cnet.polyak(agent=agent, target=target, rho=rho)
