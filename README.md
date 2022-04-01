@@ -102,18 +102,6 @@ To test:
 $ python -m pytest tests/
 ```
 
-### Docker (Not yet implemented)
-
-```bash
-$ make build
-```
-
-To test:
-
-```bash
-$ make test
-```
-
 ## Usage
 
 **Note:** Please see our [examples (TODO)]() to help you get started beyond this usage guide.

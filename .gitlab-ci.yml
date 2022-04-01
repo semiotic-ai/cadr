@@ -1,19 +1,5 @@
-build_image:
-  image: docker:20.10.12
-  services:
-    - docker:20.10.12-dind
-  script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-    - docker build -t $CI_REGISTRY_IMAGE .
-    - docker push $CI_REGISTRY_IMAGE
-  only:
-    changes:
-      - Dockerfile
-      - requirements.txt
-      - src/setup.py
-
 test:
-  image: gitlab.semiotic.ai:5050/cadcad-experiments/cadr
+  image: python:3.9-slim-buster
   script:
     - python -m pip install -e src/
     - coverage run -m pytest tests/
