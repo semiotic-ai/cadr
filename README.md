@@ -103,7 +103,7 @@ $ python -m pytest tests/
 
 ## Usage
 
-**Note:** Please see our [examples (TODO)]() to help you get started beyond this usage guide.
+**Note:** Please see our [examples](https://gitlab.com/semiotic-ai/cadr/-/tree/main/examples) to help you get started beyond this usage guide.
 
 `cadR` is written in a somewhat functional style, though it is impossible to fully avoid side effects when using `PyTorch`.
 As such, the general training process involves calling various functions.
