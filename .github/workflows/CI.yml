@@ -39,5 +39,5 @@ jobs:
           verbose: true
       - name: Check style with Black
         run: |
-        black --check src/cadr --diff
-        black --check tests --diff
+          black --check src/cadr --diff
+          black --check tests --diff
