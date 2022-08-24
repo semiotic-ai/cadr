@@ -12,6 +12,7 @@ pytest-cov
 mypy
 flake8
 isort
+black
 
 # examples
 cadCad
