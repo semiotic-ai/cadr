@@ -1,7 +1,8 @@
 # cadR
-
+[![python](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org)
+![os](https://img.shields.io/badge/os-ubuntu-blue.svg)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![pipeline status](https://gitlab.com/semiotic-ai/cadr/badges/main/pipeline.svg)](https://gitlab.com/semiotic-ai/cadr/-/commits/main)
+[![pipeline status](https://github.com/semiotic-ai/cadr/workflows/CI/badge.svg)](https://github.com/semiotic-ai/cadr/actions/workflows/CI.yml)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 `cadR` is a reinforcement library compatible with [`cadCAD`](https://cadcad.org/).
